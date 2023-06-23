@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+gtf/*
+*/.DS_Store
+.DS_Store
+*.Rproj
+converter/*

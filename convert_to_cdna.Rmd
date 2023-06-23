@@ -1,0 +1,35 @@
+---
+title: "R Notebook"
+output: 
+---
+
+```{r}
+library(data.table)
+cdna_converter = fread('converter/cdna_converter_ens108.csv.gz')
+```
+
+```{r}
+# example input file- only required columns are tx_id (matching the gtf file you use for the cdna conversion), genomic coordinate and strand (chromosome is implied by the transcript). your file can have any other columns as well, these are just the ones required for the data.table join to work
+to_convert = fread('input_file/example_input.txt.gz')
+```
+
+
+```{r}
+# this is joining your input with the cdna converter, adding on info for the cdna position of the exon your genomic coordinate is in
+converted = cdna_converter[to_convert, on = .(tx_id,strand), allow.cartesian = TRUE][start <= genomic_coordinate & end >= genomic_coordinate]
+
+#check we haven't lost any rows in the join- if you have, some of the coodinates aren't within any exon in the gtf.
+nrow(converted) == nrow(to_convert)
+
+# this is calculating cdna position from your genomic coordinate and info from the cdna converter
+converted[strand == '+', cdna_position := genomic_coordinate - start + exon_start_cdna]
+converted[strand == '-', cdna_position := end - genomic_coordinate + exon_start_cdna]
+
+#keeping only one additional column - the cdna position in the transcript
+converted = converted[, .(tx_id, genomic_coordinate, strand, cdna_position)]
+
+# write output
+fwrite(converted, 'output_file/example_output.txt.gz')
+```
+
+

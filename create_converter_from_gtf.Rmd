@@ -1,0 +1,37 @@
+---
+title: "R Notebook"
+output: 
+---
+
+```{r}
+library(data.table)
+
+# download GTF file for ensembl 108 if not already in the required folder
+if (!file.exists("gtf/Homo_sapiens.GRCh38.108.chr.gtf.gz")) {
+  download.file("https://ftp.ensembl.org/pub/release-108/gtf/homo_sapiens/Homo_sapiens.GRCh38.108.chr.gtf.gz", "gtf/Homo_sapiens.GRCh38.108.chr.gtf.gz")
+}
+```
+
+
+```{r}
+# read in gtf file
+gtf_file = list.files(path = 'gtf', full.names = TRUE)
+gtf <- rtracklayer::import(gtf_file)
+gtf_dt = as.data.table(gtf)
+
+
+cdna_converter = gtf_dt[type == 'exon', .(tx_id = transcript_id, strand, start, end, exon_number, width)]
+setorder(cdna_converter, tx_id, exon_number)
+cdna_converter = cdna_converter[, .(cumwidth = cumsum(width), start = start, end = end, width = width, exon_number = exon_number), by = .(tx_id,strand)]
+cdna_converter[, exon_start_cdna := cumwidth - width + 1]
+
+fwrite(cdna_converter[, .(tx_id, strand, start, end, exon_start_cdna)], 'converter/cdna_converter_ens108.csv.gz')
+```
+
+
+
+
+
+
+
+
