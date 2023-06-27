@@ -20,17 +20,22 @@ gtf <- rtracklayer::import(gtf_file)
 gtf_dt = as.data.table(gtf)
 
 # grab transcript exons
-cdna_converter = gtf_dt[type == 'exon', .(tx_id = transcript_id, strand, start, end, exon_number, width)]
+cdna_converter = gtf_dt[type == 'exon', .(tx_id = transcript_id, seqnames, strand, start, end, exon_number, width)]
 # set the order by exon number so we don't have to worry about strand
+cdna_converter[, exon_number := as.numeric(exon_number)]
 setorder(cdna_converter, tx_id, exon_number)
 #add the cumulative width of exons up to that exon number
-cdna_converter = cdna_converter[, .(cumwidth = cumsum(width), start = start, end = end, width = width, exon_number = exon_number), by = .(tx_id,strand)]
+cdna_converter = cdna_converter[, .(cumwidth = cumsum(width), start = start, end = end, width = width, exon_number = exon_number), by = .(tx_id,strand, seqnames)]
 # get cdna position at the beginning of that exon- will be used to convert!
 cdna_converter[, exon_start_cdna := cumwidth - width + 1]
 
-fwrite(cdna_converter[, .(tx_id, strand, start, end, exon_start_cdna)], 'converter/cdna_converter_ens108.csv.gz')
+fwrite(cdna_converter[, .(tx_id, seqnames, strand, start, end, exon_start_cdna)], 'converter/cdna_converter_ens108.csv.gz')
 ```
 
+
+```{r}
+cdna_converter[tx_id == 'ENST00000355826']
+```
 
 
 
