@@ -29,7 +29,7 @@ cdna_converter = cdna_converter[, .(cumwidth = cumsum(width), start = start, end
 # get cdna position at the beginning of that exon- will be used to convert!
 cdna_converter[, exon_start_cdna := cumwidth - width + 1]
 
-fwrite(cdna_converter[, .(tx_id, seqnames, strand, start, end, exon_start_cdna)], 'converter/cdna_converter_ens108.csv.gz')
+fwrite(cdna_converter[, .(tx_id, seqnames, strand, exon_number, start, end, exon_start_cdna)], 'converter/cdna_converter_ens108.csv.gz')
 ```
 
 
