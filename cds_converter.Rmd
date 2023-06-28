@@ -1,0 +1,29 @@
+---
+title: "R Notebook"
+output: 
+---
+
+```{r}
+library(data.table)
+
+# download GTF file for ensembl 108 if not already in the required folder
+if (!file.exists("gtf/Homo_sapiens.GRCh38.108.chr.gtf.gz")) {
+  download.file("https://ftp.ensembl.org/pub/release-108/gtf/homo_sapiens/Homo_sapiens.GRCh38.108.chr.gtf.gz", "gtf/Homo_sapiens.GRCh38.108.chr.gtf.gz")
+}
+```
+
+
+
+```{r}
+# grab transcript exons
+cds_converter = gtf_dt[type == 'CDS', .(tx_id = transcript_id, seqnames, strand, start, end, exon_number, width)]
+# set the order by exon number so we don't have to worry about strand
+cds_converter[, exon_number := as.numeric(exon_number)]
+setorder(cds_converter, tx_id, exon_number)
+#add the cumulative width of exons up to that exon number
+cds_converter = cds_converter[, .(cumwidth = cumsum(width), start = start, end = end, width = width, exon_number = exon_number), by = .(tx_id,strand, seqnames)]
+# get cdna position at the beginning of that exon- will be used to convert!
+cds_converter[, exon_start_cds := cumwidth - width + 1]
+
+fwrite(cds_converter[, .(tx_id, seqnames, strand, exon_number, start, end, exon_start_cds)], 'converter/cds_converter_ens108.csv.gz')
+```
