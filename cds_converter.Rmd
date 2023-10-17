@@ -13,6 +13,12 @@ if (!file.exists("gtf/Homo_sapiens.GRCh38.108.chr.gtf.gz")) {
 ```
 
 
+```{r}
+# read in gtf file
+gtf_file = list.files(path = 'gtf', full.names = TRUE)
+gtf <- rtracklayer::import(gtf_file)
+gtf_dt = as.data.table(gtf)
+```
 
 ```{r}
 # grab transcript exons
